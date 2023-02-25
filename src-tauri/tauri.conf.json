@@ -12,15 +12,11 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      }
+      "all": false
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
+      "category": "Utilities",
       "copyright": "",
       "deb": {
         "depends": []
@@ -33,7 +29,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.farazpatankar.tmzn",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
