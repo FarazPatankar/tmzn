@@ -73,7 +73,7 @@
       }
     ],
     "systemTray": {
-      "iconPath": "icons/railway-640x640.png",
+      "iconPath": "icons/32x32.png",
       "iconAsTemplate": true,
       "menuOnLeftClick": false
     }
