@@ -25,6 +25,11 @@ jobs:
         with:
           toolchain: stable
 
+      - name: install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7
+
       - name: install app dependencies and build it
         run: pnpm install && pnpm build
       - uses: tauri-apps/tauri-action@v0
