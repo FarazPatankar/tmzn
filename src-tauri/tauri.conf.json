@@ -12,7 +12,11 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false
+      "http": {
+        "all": false,
+        "request": true,
+        "scope": ["https://api.notion.com/v1/databases/*"]
+      }
     },
     "bundle": {
       "active": true,

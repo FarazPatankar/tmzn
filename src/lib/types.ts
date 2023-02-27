@@ -22,3 +22,9 @@ export type Member = {
     }[];
   };
 };
+
+export type ResponseData = {
+  results: {
+    properties: Member;
+  }[];
+};

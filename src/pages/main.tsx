@@ -7,11 +7,14 @@ import {
   Loader,
   Stack,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { NextPage } from "next";
+import { useRouter } from "next/router";
 import { useState, useEffect, useMemo } from "react";
+import { fetch } from "@tauri-apps/api/http";
 
-import { Config, Member } from "../lib/types";
+import { Config, Member, ResponseData } from "../lib/types";
 
 const getDay = (date: Date, timeZone: string) =>
   date.toLocaleString("en-US", { weekday: "short", timeZone });
@@ -73,6 +76,7 @@ const Main: NextPage = () => {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
+  const router = useRouter();
 
   const getMembers = async () => {
     setError("");
@@ -86,23 +90,34 @@ const Main: NextPage = () => {
 
       const { notionApiToken, notionDatabaseId } = JSON.parse(config) as Config;
       const response = await fetch(
-        `/api/members?token=${notionApiToken}&id=${notionDatabaseId}`,
+        `https://api.notion.com/v1/databases/${notionDatabaseId}/query`,
+        {
+          headers: {
+            Authorization: `Bearer ${notionApiToken}`,
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        },
       );
 
       if (!response.ok) {
-        setError(response.statusText);
-        return;
+        throw new Error(response.status as unknown as string);
       }
 
-      const data = await response.json();
+      const { results } = response.data as ResponseData;
 
-      setMembers(data.results.map(result => result.properties));
-      setIsReady(true);
+      setMembers(results.map(result => result.properties));
     } catch (error) {
-      console.log(error);
+      setError(error.message ?? "Something went wrong");
     }
 
     setIsReady(true);
+  };
+
+  const onReset = () => {
+    localStorage.removeItem("config");
+    router.push("/setup");
   };
 
   useEffect(() => {
@@ -120,18 +135,41 @@ const Main: NextPage = () => {
   if (error) {
     return (
       <Center h="100vh">
-        <Alert title="Error">Something went wrong...</Alert>
+        <Alert title={error} color="red">
+          Something went wrong while trying to fetch the members of your
+          database. Please{" "}
+          <UnstyledButton onClick={onReset}>
+            <Text color="dark" size="sm" underline>
+              click here to re-enter your credentials
+            </Text>
+          </UnstyledButton>
+          .
+        </Alert>
       </Center>
     );
   }
 
   return (
     <Container size={400} my="xl">
-      <Stack spacing="sm">
-        {members.map(member => (
-          <Member key={member.Name.title[0].plain_text} member={member} />
-        ))}
-      </Stack>
+      {members.length === 0 ? (
+        <Stack spacing="sm">
+          <Alert title="No members found" color="red">
+            Please add members to your database or{" "}
+            <UnstyledButton onClick={onReset}>
+              <Text color="dark" size="sm" underline>
+                click here to re-enter your credentials
+              </Text>
+            </UnstyledButton>
+            .
+          </Alert>
+        </Stack>
+      ) : (
+        <Stack spacing="sm">
+          {members.map(member => (
+            <Member key={member.Name.title[0].plain_text} member={member} />
+          ))}
+        </Stack>
+      )}
     </Container>
   );
 };
