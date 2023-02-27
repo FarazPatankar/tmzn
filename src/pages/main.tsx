@@ -2,6 +2,7 @@ import {
   Alert,
   Center,
   Container,
+  Flex,
   Group,
   Image,
   Loader,
@@ -15,6 +16,7 @@ import { useState, useEffect, useMemo } from "react";
 import { fetch } from "@tauri-apps/api/http";
 
 import { Config, Member, ResponseData } from "../lib/types";
+import WorldMap from "../components/WorldMap";
 
 const getDay = (date: Date, timeZone: string) =>
   date.toLocaleString("en-US", { weekday: "short", timeZone });
@@ -24,7 +26,11 @@ const getTime = (date: Date, timeZone: string) =>
     timeZone,
   });
 
-const Member: React.FC<{ member: Member }> = ({ member }) => {
+const Member: React.FC<{
+  member: Member;
+  onHighlightChange: (boolean) => void;
+  highlighted: boolean;
+}> = ({ member, onHighlightChange, highlighted }) => {
   const date = new Date();
   const timeZone = member.tz.rich_text[0].plain_text;
   const [dayTime, setDayTime] = useState({
@@ -51,9 +57,20 @@ const Member: React.FC<{ member: Member }> = ({ member }) => {
   }, [date]);
 
   return (
-    <Group align="center" position="apart">
+    <Group
+      align="center"
+      position="apart"
+      px={6}
+      style={{
+        cursor: "pointer",
+        background: highlighted ? "#c8d9eb" : "",
+        borderRadius: 6,
+      }}
+      onMouseEnter={() => onHighlightChange(true)}
+      onMouseLeave={() => onHighlightChange(false)}
+    >
       <Group align="center" spacing="sm">
-        <Image src={img} alt={name} radius="xl" width={48} height={48} />
+        <Image src={img} alt={name} radius="xl" width={40} height={40} />
         <Stack spacing={0}>
           <Text fz="xl" fw={600}>
             {dayTime.time}
@@ -76,6 +93,10 @@ const Main: NextPage = () => {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
+  const [highlightedMember, setHighlightedMember] = useState<Member | null>(
+    null,
+  );
+
   const router = useRouter();
 
   const getMembers = async () => {
@@ -150,7 +171,7 @@ const Main: NextPage = () => {
   }
 
   return (
-    <Container size={400} my="xl">
+    <Container size="xl" mt={16}>
       {members.length === 0 ? (
         <Stack spacing="sm">
           <Alert title="No members found" color="red">
@@ -164,11 +185,47 @@ const Main: NextPage = () => {
           </Alert>
         </Stack>
       ) : (
-        <Stack spacing="sm">
-          {members.map(member => (
-            <Member key={member.Name.title[0].plain_text} member={member} />
-          ))}
-        </Stack>
+        <Flex direction="column" h="100%" gap={10}>
+          <Flex style={{ overflow: "scroll" }} h="380px">
+            <Stack spacing={2} w="100%">
+              {members.map((member, i) => (
+                <Member
+                  key={member.Name.title[0].plain_text}
+                  member={member}
+                  highlighted={
+                    highlightedMember?.Name.title[0].plain_text ===
+                    member.Name.title[0].plain_text
+                  }
+                  onHighlightChange={h => {
+                    setHighlightedMember(h ? member : null);
+                  }}
+                />
+              ))}
+            </Stack>
+          </Flex>
+          <Flex
+            justify="center"
+            style={{
+              border: "1.5px dotted darkblue",
+              borderRadius: 6,
+              height: 150,
+            }}
+          >
+            <WorldMap
+              timeZoneName={highlightedMember?.tz.rich_text[0].plain_text}
+            />
+          </Flex>
+          <Flex justify="center" m={2}>
+            <Text
+              fz="xs"
+              color={highlightedMember ? "#005689" : "grey"}
+              weight={highlightedMember ? "bold" : "normal"}
+            >
+              {highlightedMember?.tz.rich_text[0].plain_text ||
+                "Highlight a member to see their timezone"}
+            </Text>
+          </Flex>
+        </Flex>
       )}
     </Container>
   );

@@ -21,13 +21,13 @@ fn main() {
                   ..
               } => {
                   let window = app.get_window("main").unwrap();
-                  let _ = window.move_window(Position::TrayCenter);
 
                   if window.is_visible().unwrap() {
                       window.hide().unwrap();
                   } else {
                       window.show().unwrap();
                       window.set_focus().unwrap();
+                      let _ = window.move_window(Position::TrayBottomCenter);
                   }
               }
               SystemTrayEvent::RightClick {
